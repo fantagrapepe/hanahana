@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ハナハナ</title>
+
+<style>
+
+body {
+  margin: 0;
+  padding: 20px;
+  background: linear-gradient(135deg,#111827,#0f172a,#1e1b4b);
+  font-family: sans-serif;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+
+.machine {
+  background: rgba(20,20,20,0.92);
+  padding: 30px;
+  border-radius: 24px;
+  text-align: center;
+  width: 100%;
+  max-width: 450px;
+}
+
+h1 {
+  color: #f472b6;
+  margin-top: 0;
+}
+
+.lamp {
+  width: 120px;
+  height: 120px;
+  margin: 25px auto;
+  border-radius: 50%;
+  background: #222;
+  font-size: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: 0.2s;
+}
+
+.lamp.big {
+  background: gold;
+  box-shadow: 0 0 25px gold, 0 0 60px gold;
+}
+
+.lamp.reg {
+  background: #60a5fa;
+  box-shadow: 0 0 25px #60a5fa, 0 0 60px #60a5fa;
+}
+
+.info {
+  margin: 6px 0;
+  font-size: 16px;
+}
+
+.history {
+  margin-top: 15px;
+  font-size: 14px;
+  color: #ddd;
+  text-align: left;
+  max-height: 140px;
+  overflow-y: auto;
+  background: rgba(255,255,255,0.05);
+  padding: 12px;
+  border-radius: 10px;
+}
+
+button {
+  background: linear-gradient(135deg,#22c55e,#16a34a);
+  border: none;
+  color: white;
+  padding: 14px 26px;
+  border-radius: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  margin-top: 10px;
+  cursor: pointer;
+}
+
+.message {
+  margin-top: 15px;
+  font-size: 20px;
+  color: #facc15;
+  min-height: 30px;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="machine">
+
+<h1>ハナハナ</h1>
+
+<div class="info" id="medals">所持: 1000枚</div>
+<div class="info" id="diff">差枚: +0枚</div>
+<div class="info" id="game">通常G数: 0G</div>
+<div class="info" id="totalGame">総G数: 0G</div>
+
+<div id="lamp" class="lamp">🌸</div>
+
+<button onclick="toggle()" id="btn">START</button>
+
+<div class="message" id="msg"></div>
+
+<div class="history" id="history"></div>
+
+</div>
+
+<script>
+
+// ====================
+// 音
+// ====================
+
+// 同じフォルダに kyuin.mp3 を置く
+const pekaSound = new Audio("kyuin.mp3");
+const startSound = new Audio("start.mp3");
+
+
+// ====================
+// 状態
+// ====================
+
+let running = false;
+let timer = null;
+
+let medals = 1000;
+let startMedals = 1000;
+
+let gameCount = 0;
+let totalGame = 0;
+
+let history = [];
+
+
+// ====================
+// 確率設定
+// ====================
+
+const setting = {
+
+  // 小役
+  replay: 1 / 7,
+  cherry: 1 / 50,
+  suica: 1 / 170,
+  bell: 1 / 6,
+
+  // ボーナス
+  big: 1 / 232,
+  reg: 1 / 332
+};
+
+
+// ====================
+// START / STOP
+// ====================
+
+function toggle() {
+
+  if (!running) {
+
+    start();
+
+  } else {
+
+    stop();
+  }
+}
+
+function start() {
+
+  running = true;
+
+  document.getElementById("btn").innerText =
+    "STOP";
+
+  loop();
+}
+
+function stop() {
+
+  running = false;
+
+  document.getElementById("btn").innerText =
+    "START";
+
+  clearTimeout(timer);
+}
+
+
+// ====================
+// メインループ
+// ====================
+
+function loop() {
+
+  if (!running) return;
+
+  startSound.currentTime = 0;
+startSound.play();
+
+  const result = spinOnce();
+
+  handleResult(result);
+
+  // 回転数
+  gameCount++;
+  totalGame++;
+
+  update();
+
+  timer = setTimeout(loop, 900);
+}
+
+
+// ====================
+// 小役抽選
+// ====================
+
+function drawSmall() {
+
+  const r = Math.random();
+
+  if (r < setting.replay)
+    return "REPLAY";
+
+  else if (
+    r <
+    setting.replay +
+    setting.cherry
+  )
+    return "CHERRY";
+
+  else if (
+    r <
+    setting.replay +
+    setting.cherry +
+    setting.suica
+  )
+    return "SUICA";
+
+  else if (
+    r <
+    setting.replay +
+    setting.cherry +
+    setting.suica +
+    setting.bell
+  )
+    return "BELL";
+
+  return "";
+}
+
+
+// ====================
+// ボーナス抽選
+// ====================
+
+function getBonus() {
+
+  const r = Math.random();
+
+  if (r < setting.big)
+    return "BIG";
+
+  else if (
+    r <
+    setting.big +
+    setting.reg
+  )
+    return "REG";
+
+  return "";
+}
+
+
+// ====================
+// 1回転
+// ====================
+
+function spinOnce() {
+
+  return {
+
+    small: drawSmall(),
+
+    bonus: getBonus()
+  };
+}
+
+
+// ====================
+// 結果処理
+// ====================
+
+function handleResult(res) {
+
+  const lamp =
+    document.getElementById("lamp");
+
+  lamp.className = "lamp";
+
+  // リプレイ
+  if (res.small === "REPLAY") {
+
+    document.getElementById("msg").innerText =
+      "REPLAY";
+
+    return;
+  }
+
+  // 1回転3枚消費
+  medals -= 3;
+
+  // BIG
+  if (res.bonus === "BIG") {
+
+    medals += 260;
+
+    // 音
+    pekaSound.currentTime = 0;
+    pekaSound.play();
+
+    lamp.classList.add("big");
+
+    document.getElementById("msg").innerText =
+      "BIG +260";
+
+    addHistory("BIG", gameCount);
+
+    gameCount = 0;
+
+    return;
+  }
+
+  // REG
+  if (res.bonus === "REG") {
+
+    medals += 120;
+
+    // 音
+    pekaSound.currentTime = 0;
+    pekaSound.play();
+
+    lamp.classList.add("reg");
+
+    document.getElementById("msg").innerText =
+      "REG +120";
+
+    addHistory("REG", gameCount);
+
+    gameCount = 0;
+
+    return;
+  }
+
+  // ベル
+  if (res.small === "BELL") {
+
+    medals += 8;
+
+    document.getElementById("msg").innerText =
+      "🔔 BELL +8";
+
+    return;
+  }
+
+  // チェリー
+  if (res.small === "CHERRY") {
+
+    medals += 2;
+
+    document.getElementById("msg").innerText =
+      "🍒 CHERRY +2";
+
+    return;
+  }
+
+  // スイカ
+  if (res.small === "SUICA") {
+
+    medals += 10;
+
+    document.getElementById("msg").innerText =
+      "🍉 SUICA +10";
+
+    return;
+  }
+
+  // ハズレ
+  document.getElementById("msg").innerText =
+    "・・・";
+}
+
+
+// ====================
+// 履歴
+// ====================
+
+function addHistory(type, g) {
+
+  history.unshift(
+    type + "（" + g + "G）"
+  );
+
+  // 最大20件
+  if (history.length > 20) {
+
+    history.pop();
+  }
+
+  document.getElementById("history").innerHTML =
+    history.map(h => "・" + h).join("<br>");
+}
+
+
+// ====================
+// 表示更新
+// ====================
+
+function update() {
+
+  document.getElementById("medals").innerText =
+    "所持: " + medals + "枚";
+
+  const diff =
+    medals - startMedals;
+
+  document.getElementById("diff").innerText =
+    "差枚: " +
+    (diff >= 0 ? "+" : "") +
+    diff +
+    "枚";
+
+  document.getElementById("game").innerText =
+    "通常G数: " +
+    gameCount +
+    "G";
+
+  document.getElementById("totalGame").innerText =
+    "総G数: " +
+    totalGame +
+    "G";
+}
+
+update();
+
+</script>
+
+</body>
+</html>
