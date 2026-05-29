@@ -221,10 +221,6 @@ function loop() {
 
   if (!running) return;
 
-  // スタート音
-  startSound.currentTime = 0;
-  startSound.play();
-
   const result = spinOnce();
 
   handleResult(result);
