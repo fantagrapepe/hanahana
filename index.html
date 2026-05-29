@@ -122,9 +122,22 @@ button {
 // 音
 // ====================
 
-// 同じフォルダに kyuin.mp3 を置く
-const pekaSound = new Audio("kyuin.mp3");
+// スタート音
 const startSound = new Audio("start.mp3");
+
+// 音量調整
+startSound.volume = 0.4;
+
+
+// スマホ対応ペカ音
+function playPeka() {
+
+  const sound = new Audio("kyuin.mp3");
+
+  sound.volume = 0.8;
+
+  sound.play();
+}
 
 
 // ====================
@@ -206,8 +219,9 @@ function loop() {
 
   if (!running) return;
 
+  // スタート音
   startSound.currentTime = 0;
-startSound.play();
+  startSound.play();
 
   const result = spinOnce();
 
@@ -327,9 +341,8 @@ function handleResult(res) {
 
     medals += 260;
 
-    // 音
-    pekaSound.currentTime = 0;
-    pekaSound.play();
+    // ペカ音
+    playPeka();
 
     lamp.classList.add("big");
 
@@ -348,9 +361,8 @@ function handleResult(res) {
 
     medals += 120;
 
-    // 音
-    pekaSound.currentTime = 0;
-    pekaSound.play();
+    // ペカ音
+    playPeka();
 
     lamp.classList.add("reg");
 
