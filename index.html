@@ -119,16 +119,18 @@ button {
 <script>
 
 // ====================
-// 音
+// ペカ音
 // ====================
 
-
-// ペカ音
 const pekaSound = new Audio("kyuin.mp3");
+
 pekaSound.volume = 0.8;
 
+// 先読み
+pekaSound.load();
 
-// 安定版ペカ音再生
+
+// 安定再生
 function playPeka() {
 
   pekaSound.pause();
