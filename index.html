@@ -122,24 +122,14 @@ button {
 // ペカ音
 // ====================
 
-const pekaSound = new Audio("kyuin.mp3");
-
-pekaSound.volume = 0.8;
-
-// 先読み
-pekaSound.load();
-
-
-// 安定再生
 function playPeka() {
 
-  pekaSound.pause();
+const sound = new Audio("kyuin.mp3");
 
-  pekaSound.currentTime = 0;
+sound.volume = 0.8;
 
-  pekaSound.play();
+sound.play();
 }
-
 
 // ====================
 // 状態
